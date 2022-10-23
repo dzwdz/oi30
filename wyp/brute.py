@@ -51,7 +51,7 @@ def fullvis(in_me, in_trucks):
         me.draw(si - side - .1, "me")
         for i in range(len(cars)):
             off = -.1 if i == cpos else 0
-            cars[i].draw(si + off, i)
+            cars[i].draw(si + off, cars[i].vel)
         si += 2.5
 
     def update(dt):
