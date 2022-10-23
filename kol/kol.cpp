@@ -12,7 +12,7 @@ typedef long long ll;
 #define MAXSIZE 2000
 #define MAXFOOD 1000000
 
-#define scanf(...) assert(scanf(__VA_ARGS__))
+#define scanf(...) assert(scanf(__VA_ARGS__) != EOF)
 
 // TODO assert unreachable
 
@@ -63,9 +63,9 @@ ll query(ull qw, ull qk) {
 int main() {
 	ull foodAmt, cmdAmt;
 	scanf("%llu%llu%llu", &squareSize, &foodAmt, &cmdAmt);
-	pprintd(squareSize);
-	pprintd(foodAmt);
-	pprintd(cmdAmt);
+	// pprintd(squareSize);
+	// pprintd(foodAmt);
+	// pprintd(cmdAmt);
 	assert(2 <= squareSize && squareSize <= 2000);
 	assert(1 <= foodAmt && foodAmt <= 1000000);
 	assert(1 <= cmdAmt && cmdAmt <= 1000000);
@@ -98,7 +98,8 @@ int main() {
 				ull qx, qy;
 				scanf("%llu %llu", &qx, &qy);
 				qx--; qy--;
-				printf("%lld, %llu %llu\n", query(qx, qy), qx, qy);
+				//printf("%lld, %llu %llu\n", query(qx, qy), qx, qy);
+				printf("%lld\n", query(qx, qy));
 				break;
 			default:
 				assert(false);
