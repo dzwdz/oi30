@@ -15,30 +15,33 @@ def get_testcase():
 
 ###
 
-def gaps0(me, cars):
+def gaps0(in_me, in_cars):
     from fractions import Fraction as Frac
-    myvel = Frac(me[1], me[2])
-    mylen = me[0]
-    cars = sorted(cars)
-    for car in cars:
+    class Car:
+        def __init__(self, front, size, vel):
+            self.front = front
+            self.size = size
+            self.v = vel
+    me = Car(0, in_me[0], Frac(in_me[1], in_me[2]))
+    cars = []
+    for car in sorted(in_cars):
         v = Frac(car[2], car[3])
-        if not v < myvel:
-            print("invalid input!", v, myvel)
+        if not v < me.v:
+            print("invalid input!", v, me.v)
             assert False
-        car.append(v)
-        # [front, length, _, _, vel]
+        cars.append(Car(car[0], car[1], v))
     assert len(cars) > 0
-    swerve_cnt = 1 # swerves right once at the end, since it's passing at least one trucks
 
-    frontvels = [(0, cars[-1][4])]
+    swerve_cnt = 1 # swerves right once at the end, since it's passing at least one trucks
+    frontvels = [(0, cars[-1].v)]
     #print('i', 'dv', 'gap/dv', 'init vels', sep='\t')
     for i in range(len(cars) - 1)[::-1]:
         frontc = cars[i+1]
         backc = cars[i]
-        front = frontc[0] - frontc[1] # back of front car
-        back = backc[0] # front of back car
+        front = frontc.front - frontc.size # back of front car
+        back = backc.front # front of back car
 
-        backv = backc[4]
+        backv = backc.v
 
         def find_hit(gap):
             assert gap >= 0
@@ -67,7 +70,7 @@ def gaps0(me, cars):
         edges = []
         swerves = False
 
-        if True: # find the range of t for which gap >= mylen
+        if True: # find the range of t for which gap >= me.size
             class Period:
                 def __init__(self, t, dur, gap, dgap):
                     self.t = t
@@ -104,20 +107,20 @@ def gaps0(me, cars):
             #print('|', 't', 'dur', 'gap', 'dgap', sep='\t')
             #for p in periods:
             #    p.dump()
-            if periods[0].gap >= mylen:
+            if periods[0].gap >= me.size:
                 edges.append(0)
             for j in range(len(periods) - 1):
                 p1 = periods[j]
                 p2 = periods[j+1]
-                if (p1.gap >= mylen) != (p2.gap >= mylen):
-                    edge = p1.t + (mylen - p1.gap) / p1.dgap
+                if (p1.gap >= me.size) != (p2.gap >= me.size):
+                    edge = p1.t + (me.size - p1.gap) / p1.dgap
                     assert p1.t <= edge <= p2.t
                     edges.append(edge)
             if True:
                 p = periods[-1]
-                if (p.gap >= mylen and p.dgap < 0) or (p.gap < mylen and p.dgap > 0):
-                    # (gap-mylen) and (gap-mylen)' have different signs - will cross 0
-                    edge = p.t + (mylen - p.gap) / p.dgap
+                if (p.gap >= me.size and p.dgap < 0) or (p.gap < me.size and p.dgap > 0):
+                    # (gap-me.size) and (gap-me.size)' have different signs - will cross 0
+                    edge = p.t + (me.size - p.gap) / p.dgap
                     assert p.t <= edge
                     edges.append(edge)
 
@@ -126,10 +129,8 @@ def gaps0(me, cars):
                     if hit_t != None:
                         assert edge < hit_t
                 # when do we pass the edge?
-                pass_t = (back + mylen) / (myvel - backv)
-                # this can be too late
-                # after the gap closes, the back of it can move closer than backv
-                is_too_late = hit_t != None and hit_t < pass_t
+                pass_t = (back + me.size) / (me.v - backv)
+                # this can be too late - see asserts later
                 # however, the edge is always before the gap closure anyways
                 if hit_t != None:
                     assert edges[1] < hit_t
@@ -138,19 +139,22 @@ def gaps0(me, cars):
                 if len(edges) == 1:
                     swerves = edges[0] <= pass_t
                 elif len(edges) == 2:
-                    # the back of the car needs to pass inbetween edges - while gap >= mylen
+                    # the back of the car needs to pass inbetween edges - while gap >= me.size
                     swerves = edges[0] <= pass_t <= edges[1]
                 assert swerves != None
+
+                # after the gap closes, the back of it can move closer than backv
+                is_too_late = hit_t != None and hit_t < pass_t
                 if is_too_late:
-                    assert not swerves
-                    # because:
                     assert len(edges) == 2 # closes completely
-                    assert edges[1] < hit_t # must pass mylen before passes 0
+                    assert edges[1] < hit_t # must pass me.size before passes 0
                     assert hit_t < pass_t # only is too late if the gap closes before pass_t
                     # thus
                     assert edges[1] < pass_t
                     # thus
                     assert not (pass_t <= edges[1])
+                    # thus
+                    assert not swerves
                 if swerves:
                     swerve_cnt += 1
 
@@ -164,9 +168,10 @@ def gaps0(me, cars):
 
             frontvels = [(hit_t, hit_v)] + frontvels
             if hit_t != 0:
-                frontvels = [(0, backc[4])] + frontvels
+                frontvels = [(0, backc.v)] + frontvels
         else:
-            frontvels = [(0, backc[4])]
+            frontvels = [(0, backc.v)]
+        # TODO prune frontvels that happen after the car has passed us
 
         if edges:
             print(i, swerves, *edges, sep='\t')
