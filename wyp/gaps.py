@@ -168,7 +168,8 @@ def gaps0(me, cars):
         else:
             frontvels = [(0, backc[4])]
 
-        print(i, swerves, *edges, sep='\t')
+        if edges:
+            print(i, swerves, *edges, sep='\t')
     return swerve_cnt
 
 
