@@ -27,6 +27,9 @@ def gaps0(me, cars):
             assert False
         car.append(v)
         # [front, length, _, _, vel]
+    assert len(cars) > 0
+    swerve_cnt = 1 # swerves right once at the end, since it's passing at least one trucks
+
     frontvels = [(0, cars[-1][4])]
     #print('i', 'dv', 'gap/dv', 'init vels', sep='\t')
     for i in range(len(cars) - 1)[::-1]:
@@ -62,6 +65,7 @@ def gaps0(me, cars):
         igap = front - back # initial gap
         hit_t, hit_v = find_hit(igap)
         edges = []
+        swerves = False
 
         if True: # find the range of t for which gap >= mylen
             class Period:
@@ -116,9 +120,40 @@ def gaps0(me, cars):
                     edge = p.t + (mylen - p.gap) / p.dgap
                     assert p.t <= edge
                     edges.append(edge)
-            for edge in edges:
+
+            if edges:
+                for edge in edges:
+                    if hit_t != None:
+                        assert edge < hit_t
+                # when do we pass the edge?
+                pass_t = (back + mylen) / (myvel - backv)
+                # this can be too late
+                # after the gap closes, the back of it can move closer than backv
+                is_too_late = hit_t != None and hit_t < pass_t
+                # however, the edge is always before the gap closure anyways
                 if hit_t != None:
-                    assert edge < hit_t
+                    assert edges[1] < hit_t
+
+                swerves = None
+                if len(edges) == 1:
+                    swerves = edges[0] <= pass_t
+                elif len(edges) == 2:
+                    # the back of the car needs to pass inbetween edges - while gap >= mylen
+                    swerves = edges[0] <= pass_t <= edges[1]
+                assert swerves != None
+                if is_too_late:
+                    assert not swerves
+                    # because:
+                    assert len(edges) == 2 # closes completely
+                    assert edges[1] < hit_t # must pass mylen before passes 0
+                    assert hit_t < pass_t # only is too late if the gap closes before pass_t
+                    # thus
+                    assert edges[1] < pass_t
+                    # thus
+                    assert not (pass_t <= edges[1])
+                if swerves:
+                    swerve_cnt += 1
+
 
         if hit_t != None:
             while frontvels and frontvels[0][0] <= hit_t:
@@ -133,9 +168,9 @@ def gaps0(me, cars):
         else:
             frontvels = [(0, backc[4])]
 
-
-        print(i, *edges, sep='\t')
+        print(i, swerves, *edges, sep='\t')
+    return swerve_cnt
 
 
 me, trucks = get_testcase()
-gaps0(me, trucks)
+print(gaps0(me, trucks))
