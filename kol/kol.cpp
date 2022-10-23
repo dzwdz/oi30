@@ -12,12 +12,15 @@ typedef long long ll;
 #define scanf(...) assert(scanf(__VA_ARGS__) != EOF)
 #endif
 
-// TODO assert unreachable
+// #ifdef NDEBUG
+// #undef assert
+// #define assert(cond) if (!(cond)) __builtin_unreachable();
+// #endif
 
 /* kolory +1 */
 static ull food[MAXSIZE * MAXSIZE] = {0};    // 4 000 000
 static ull history[MAXSIZE * MAXSIZE] = {0}; // 4 000 000
-static ull curTick = 1;
+static ull nextTick = 1;
 static ull squareSize;
 static struct {
 	ull pos = 0;
@@ -29,16 +32,10 @@ static struct {
 static ull moves = 0;
 
 
-void moveDir(char c) {
-	ll dp = 0;
-	if (c == 'G') dp = -MAXSIZE;
-	else if (c == 'D') dp = MAXSIZE;
-	else if (c == 'L') dp = -1;
-	else if (c == 'P') dp =  1;
-	else assert(false);
+void moveDir(ll dp) {
 	snek.pos += dp;
 	assert(snek.pos < squareSize * squareSize);
-	history[snek.pos] = curTick++;
+	history[snek.pos] = nextTick++;
 	ull ate = food[snek.pos];
 	if (ate) {
 		food[snek.pos] = 0;
@@ -49,7 +46,7 @@ void moveDir(char c) {
 }
 
 ll query(ull qw, ull qk) {
-	ull deltaTick = curTick - history[qw * MAXSIZE + qk];
+	ull deltaTick = nextTick - history[qw * MAXSIZE + qk];
 	assert(deltaTick >= 1);
 	if (deltaTick > snek.len) return -1;
 	return snek.colors[snek.len - deltaTick];
@@ -63,8 +60,8 @@ int main() {
 	assert(1 <= cmdAmt && cmdAmt <= 1000000);
 
 	snek.colors[0] = 0;
-	curTick = 1;
-	history[0] = curTick++;
+	nextTick = 1;
+	history[0] = nextTick++;
 
 	for (ull i = 0; i < foodAmt; i++) {
 		ull w, k, c;
@@ -78,12 +75,11 @@ int main() {
 		char dir;
 		scanf(" %c", &dir);
 		switch (dir) {
-			case 'P':
-			case 'D':
-			case 'L':
-			case 'G':
-				moveDir(dir);
-				break;
+			case 'G': moveDir(-MAXSIZE); break;
+			case 'D': moveDir(MAXSIZE); break;
+			case 'L': moveDir(-1); break;
+			case 'P': moveDir(1); break;
+
 			case 'Z':
 				ull qx, qy;
 				scanf("%llu %llu", &qx, &qy);
