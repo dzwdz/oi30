@@ -1,9 +1,10 @@
 #define NDEBUG
 #include <assert.h>
 #include <cstdio>
+#include <stdint.h>
 
-typedef unsigned long long ull;
-typedef long long ll;
+typedef uint32_t u_t;
+typedef int32_t s_t;
 
 #define MAXSIZE 2000
 #define MAXFOOD 1000000
@@ -18,25 +19,25 @@ typedef long long ll;
 // #endif
 
 /* kolory +1 */
-static ull food[MAXSIZE * MAXSIZE] = {0};    // 4 000 000
-static ull history[MAXSIZE * MAXSIZE] = {0}; // 4 000 000
-static ull nextTick = 1;
-static ull squareSize;
+static u_t food[MAXSIZE * MAXSIZE] = {0};    // 4 000 000
+static u_t history[MAXSIZE * MAXSIZE] = {0}; // 4 000 000
+static u_t nextTick = 1;
+static u_t squareSize;
 static struct {
-	ull pos = 0;
-	ull len = 1;
-	ull colors[MAXFOOD];                    // 1 000 000
+	u_t pos = 0;
+	u_t len = 1;
+	u_t colors[MAXFOOD];                    // 1 000 000
 } snek;
-// 9 000 000 * sizeof(ull) ~~ 72 000 000, 72 MB
+// 9 000 000 * sizeof(u_t) ~~ 72 000 000, 72 MB
 
-static ull moves = 0;
+static u_t moves = 0;
 
 
-void moveDir(ll dp) {
+void moveDir(s_t dp) {
 	snek.pos += dp;
 	assert(snek.pos < squareSize * squareSize);
 	history[snek.pos] = nextTick++;
-	ull ate = food[snek.pos];
+	u_t ate = food[snek.pos];
 	if (ate) {
 		food[snek.pos] = 0;
 		snek.colors[snek.len++] = ate - 1;
@@ -45,16 +46,16 @@ void moveDir(ll dp) {
 	}
 }
 
-ll query(ull qw, ull qk) {
-	ull deltaTick = nextTick - history[qw * MAXSIZE + qk];
+s_t query(u_t qw, u_t qk) {
+	u_t deltaTick = nextTick - history[qw * MAXSIZE + qk];
 	assert(deltaTick >= 1);
 	if (deltaTick > snek.len) return -1;
 	return snek.colors[snek.len - deltaTick];
 }
 
 int main() {
-	ull foodAmt, cmdAmt;
-	scanf("%llu%llu%llu", &squareSize, &foodAmt, &cmdAmt);
+	u_t foodAmt, cmdAmt;
+	scanf("%u%u%u", &squareSize, &foodAmt, &cmdAmt);
 	assert(2 <= squareSize && squareSize <= 2000);
 	assert(1 <= foodAmt && foodAmt <= 1000000);
 	assert(1 <= cmdAmt && cmdAmt <= 1000000);
@@ -63,15 +64,15 @@ int main() {
 	nextTick = 1;
 	history[0] = nextTick++;
 
-	for (ull i = 0; i < foodAmt; i++) {
-		ull w, k, c;
-		scanf("%llu%llu%llu", &w, &k, &c);
+	for (u_t i = 0; i < foodAmt; i++) {
+		u_t w, k, c;
+		scanf("%u%u%u", &w, &k, &c);
 		w--; k--;
 		assert(w < squareSize && k < squareSize);
 		food[w * MAXSIZE + k] = c + 1;
 	}
 
-	for (ull i = 0; i < cmdAmt; i++) {
+	for (u_t i = 0; i < cmdAmt; i++) {
 		char dir;
 		scanf(" %c", &dir);
 		switch (dir) {
@@ -81,10 +82,10 @@ int main() {
 			case 'P': moveDir(1); break;
 
 			case 'Z':
-				ull qx, qy;
-				scanf("%llu %llu", &qx, &qy);
+				u_t qx, qy;
+				scanf("%u %u", &qx, &qy);
 				qx--; qy--;
-				printf("%lld\n", query(qx, qy));
+				printf("%d\n", query(qx, qy));
 				break;
 			default:
 				assert(false);
