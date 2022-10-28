@@ -148,39 +148,43 @@ def compare(f1, f2, big, lil):
         print(a1)
         print(a2)
 
-ocen2m = 50000
-ocen2b = [1, 2] * ocen2m + [1, 2, 1] + [2, 1] * ocen2m
-ocen2l = [1] * ocen2m + [2] + [1] * ocen2m
-ocen2r = [1, 0] * (ocen2m - 1) + [1] * 7 + [0, 1] * (ocen2m - 1)
+if False:
+    ocen2m = 50000
+    ocen2b = [1, 2] * ocen2m + [1, 2, 1] + [2, 1] * ocen2m
+    ocen2l = [1] * ocen2m + [2] + [1] * ocen2m
+    ocen2r = [1, 0] * (ocen2m - 1) + [1] * 7 + [0, 1] * (ocen2m - 1)
 
-print(full, partial)
-print(brute2(full, partial))
-print(magic1(full, partial))
+# print(full, partial)
+# print(brute2(full, partial))
+print(" ".join(map(str, brute2(full, partial))))
 
-compare(brute2, magic1, [1, 2, 3, 1, 2, 3, 1, 2, 3, 4, 5], [1, 2, 3, 4, 5])
+# print(magic1(full, partial))
+
+# compare(brute2, magic1, [1, 2, 3, 1, 2, 3, 1, 2, 3, 4, 5], [1, 2, 3, 4, 5])
 
 # print(brute2(ocen2b, ocen2l))
 # print(magic1(ocen2b, ocen2l) == ocen2r)
 
 # compare(brute2, magic1, full, partial)
 
-import random
-from random import randint
-def randtest(flen, plen, var):
-    full = random.choices(range(var), k=flen)
-    partial = lmap(lambda k: full[k], sorted(random.sample(range(flen), k=plen)))
-    return (full, partial)
-    compare(brute2, magic1, full, partial)
-
-for seed in [13, 37, 1337]:
-    print("seed", seed)
-    random.seed(seed)
-    for i in range(1000):
-        f, p = randtest(random.randint(10, 25), random.randint(2, 10), random.randint(2, 8))
+if False:
+    import random
+    from random import randint
+    def randtest(flen, plen, var):
+        full = random.choices(range(var), k=flen)
+        partial = lmap(lambda k: full[k], sorted(random.sample(range(flen), k=plen)))
+        return (full, partial)
         compare(brute2, magic1, full, partial)
-    print("comparision done, assert stress")
 
-    for i in range(2**16):
-        if i & (2**12 - 1) == 0:
-            print(i)
-        f, p = randtest(randint(50, 1000), random.randint(1, 50), random.randint(1, 25))
+    for seed in [13, 37, 1337]:
+        print("seed", seed)
+        random.seed(seed)
+        for i in range(1000):
+            f, p = randtest(random.randint(10, 25), random.randint(2, 10), random.randint(2, 8))
+            compare(brute2, magic1, full, partial)
+        print("comparision done, assert stress")
+
+        for i in range(2**16):
+            if i & (2**12 - 1) == 0:
+                print(i)
+            f, p = randtest(randint(50, 1000), random.randint(1, 50), random.randint(1, 25))
