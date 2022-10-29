@@ -34,13 +34,13 @@ for f in fracs[2:]:
 # 
 # print(len(fracs), len(f2), len(f3))
 
-truckAmt = 1000#100000
+truckAmt = 100000
 print(truckAmt, 1, 1, 1)
 
 pos = 10 ** 9
-gap = 1
+gap = 10
 
 for i in range(truckAmt):
-    v = f2[i]
+    v = f2[i % len(f2)]
     print(pos, 1, v.numerator, v.denominator)
     pos -= 1 + gap
