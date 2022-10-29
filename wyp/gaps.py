@@ -173,8 +173,8 @@ def gaps0(in_me, in_cars):
             frontvels = [(0, backc.v)]
         # TODO prune frontvels that happen after the car has passed us
 
-        if edges:
-            print(i, swerves, *edges, sep='\t')
+        #if edges:
+        #    print(i, swerves, len(frontvels), *edges, sep='\t')
     return swerve_cnt
 
 
