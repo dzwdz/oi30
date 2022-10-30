@@ -1,4 +1,3 @@
-// TODO re-read, triple check types - i had some double/int mixups
 // TODO more extreme test
 
 #include <algorithm>
@@ -38,7 +37,6 @@ void readtest() {
 		car_storage[i].size = size;
 		car_storage[i].v = (double)vel1 / vel2;
 		assert(car_storage[i].front <= 1000000000);
-		// TODO is that a correct assumption?
 		assert(car_storage[i].size <= car_storage[i].front);
 		assert(car_storage[i].v < my_vel);
 	}
@@ -71,11 +69,11 @@ uint32_t solve() {
 			nextedge = 1;
 			edges[0] = 0;
 		}
-		for (int i = 0; i < frontvels.size(); i++) {
+		for (size_t i = 0; i < frontvels.size(); i++) {
 			assert(gap >= 0);
 			double t = frontvels[i].t;
 			double v = frontvels[i].v;
-			double duration = -1;
+			double duration;
 			bool last = !(i + 1 < frontvels.size());
 			if (!last) {
 				double next_t = frontvels[i+1].t;
@@ -109,10 +107,9 @@ uint32_t solve() {
 					hit = true;
 					hit_t = t - gap / dg;
 					hit_v = v;
-					assert(hit_t >= 0);
+					assert(hit_t >= t);
 					break;
 				}
-				// TODO write tests that fail if this assignment isn't here
 				gap = next_gap;
 			} else {
 				debugf("last one, dg %f\n", dg);
@@ -166,7 +163,7 @@ uint32_t solve() {
 			frontvels.push_front({0, back.v});
 		}
 		// for (auto &f : frontvels) debugf("(%f, %f),\t", f.t, f.v);
-		debugf("frontvels.size %u\n", frontvels.size());
+		debugf("frontvels.size %lu\n", frontvels.size());
 		debugf("%f => %f, us at %f\n", edges[0], edges[1], enters_at);
 		if (swerves) debugf("swerves!\n");
 	} // for cars
@@ -176,6 +173,5 @@ uint32_t solve() {
 int main() {
 	readtest();
 	sort(cars.begin(), cars.end(), [](auto &a, auto &b){return a.front < b.front;});
-
 	printf("%u\n", solve());
 }
