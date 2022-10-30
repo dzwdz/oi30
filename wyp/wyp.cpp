@@ -29,13 +29,14 @@ static vector<Car> cars;
 void readtest() {
 	uint32_t truckAmt, myVel1, myVel2;
 	scanf("%u %u %u %u ", &truckAmt, &my_len, &myVel1, &myVel2);
-	my_vel = myVel1 / myVel2;
+	// catched by burzynski's tests: double = int/int
+	my_vel = (double)myVel1 / (double)myVel2;
 	for (uint32_t i = 0; i < truckAmt; i++) {
 		uint32_t front, size, vel1, vel2;
 		scanf("%u %u %u %u ", &front, &size, &vel1, &vel2);
 		car_storage[i].front = front;
 		car_storage[i].size = size;
-		car_storage[i].v = (double)vel1 / vel2;
+		car_storage[i].v = (double)vel1 / (double)vel2;
 		assert(car_storage[i].front <= 1000000000);
 		assert(car_storage[i].size <= car_storage[i].front);
 		assert(car_storage[i].v < my_vel);
@@ -139,6 +140,7 @@ uint32_t solve() {
 		}
 
 		double enters_at = (back.front + my_len) / (my_vel - back.v);
+		debugf("enters_at = (%u + %u) / (%f - %f) = %f\n", back.front, my_len, my_vel, back.v, enters_at);
 		// incorrect if the gap closes before we reach it
 		// doesn't matter much
 		bool swerves = false;
