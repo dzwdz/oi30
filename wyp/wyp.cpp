@@ -20,10 +20,10 @@ struct Car {
 		return front - size;
 	}
 };
-static Car car_storage[100000];
 
 static uint32_t my_len;
 static double my_vel;
+static Car car_storage[100000];
 static vector<Car> cars;
 
 void readtest() {
@@ -74,36 +74,57 @@ uint32_t solve() {
 			assert(gap >= 0);
 			double t = frontvels[i].t;
 			double v = frontvels[i].v;
-			double duration;
+			double dg = v - back.v; // derivative of the gap
+
 			bool last = !(i + 1 < frontvels.size());
+			double next_gap;
 			if (!last) {
 				double next_t = frontvels[i+1].t;
 				assert(next_t >= t);
-				duration = next_t - t;
+				double duration = next_t - t;
 				if (duration == 0) {
 					assert(false); // NOT impossible (yet?), just unexpected
 				}
+				next_gap = gap + dg * duration;
 			}
 
-			double dg = v - back.v; // derivative of the gap
-			if (!last) {
-				double next_gap = gap + dg * duration;
-				if (nextedge == 0) {
-					assert(gap < my_len);
+			// working around a dumb gcc bug
+			if (last) last = true; else last = false;
+
+			if (nextedge == 0) {
+				assert(gap < my_len);
+				if (!last) {
 					if (next_gap >= my_len) {
 						nextedge = 1;
 						edges[0] = t - (gap - my_len) / dg;
 						assert(edges[0] >= t);
 					}
-				} else if (nextedge == 1) {
-					assert(gap >= my_len);
+				} else {
+					if (dg > 0) {
+						nextedge = 1;
+						edges[0] = t - (gap - my_len) / dg;
+						assert(edges[0] >= t);
+					}
+				}
+			} else if (nextedge == 1) {
+				assert(gap >= my_len);
+				if (!last) {
 					if (next_gap < my_len) {
 						nextedge = 2;
 						edges[1] = t - (gap - my_len) / dg;
 						assert(edges[1] >= t);
 					}
+				} else {
+					if (dg < 0) {
+						nextedge = 2;
+						edges[1] = t - (gap - my_len) / dg;
+						assert(edges[1] >= t);
+					}
 				}
+			}
 
+
+			if (!last) {
 				if (v < back.v && next_gap <= 0) {
 					hit = true;
 					hit_t = t - gap / dg;
@@ -114,21 +135,6 @@ uint32_t solve() {
 				gap = next_gap;
 			} else {
 				debugf("last one, dg %f\n", dg);
-				if (nextedge == 0) {
-					assert(gap < my_len);
-					if (dg > 0) {
-						nextedge = 1;
-						edges[0] = t - (gap - my_len) / dg;
-						assert(edges[0] >= t);
-					}
-				} else if (nextedge == 1) {
-					assert(gap >= my_len);
-					if (dg < 0) {
-						nextedge = 2;
-						edges[1] = t - (gap - my_len) / dg;
-						assert(edges[1] >= t);
-					}
-				}
 				if (gap >= 0 && dg < 0) {
 					hit = true;
 					hit_t = t - gap / dg;
