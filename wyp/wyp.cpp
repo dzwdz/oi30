@@ -9,8 +9,8 @@
 
 using namespace std;
 
-// #define debugf(...) fprintf(stderr, __VA_ARGS__)
 #define debugf(...) do{}while(0)
+// #define debugf(...) fprintf(stderr, __VA_ARGS__)
 
 struct Car {
 	uint32_t front, size;
@@ -31,17 +31,18 @@ void readtest() {
 	scanf("%u %u %u %u ", &truckAmt, &my_len, &myVel1, &myVel2);
 	// catched by burzynski's tests: double = int/int
 	my_vel = (double)myVel1 / (double)myVel2;
+	cars = vector<Car>(car_storage, car_storage + truckAmt);
+
 	for (uint32_t i = 0; i < truckAmt; i++) {
 		uint32_t front, size, vel1, vel2;
 		scanf("%u %u %u %u ", &front, &size, &vel1, &vel2);
-		car_storage[i].front = front;
-		car_storage[i].size = size;
-		car_storage[i].v = (double)vel1 / (double)vel2;
-		assert(car_storage[i].front <= 1000000000);
-		assert(car_storage[i].size <= car_storage[i].front);
-		assert(car_storage[i].v < my_vel);
+		cars[i].front = front;
+		cars[i].size = size;
+		cars[i].v = (double)vel1 / (double)vel2;
+		assert(cars[i].front <= 1000000000);
+		assert(cars[i].size <= cars[i].front);
+		assert(cars[i].v < my_vel);
 	}
-	cars = vector<Car>(car_storage, car_storage + truckAmt);
 }
 
 uint32_t solve() {
@@ -51,19 +52,17 @@ uint32_t solve() {
 	frontvels.push_front({0, cars.back().v});
 
 	for (int i = cars.size() - 2; i >= 0; i--) {
+		debugf("=== %d\n", i);
+		
 		Car &front = cars[i+1];
 		Car &back = cars[i];
-
-		debugf("=== %d\n", i);
 
 		bool hit = false;
 		double hit_t, hit_v;
 		double edges[2] = {-1, -1};
 		int nextedge = 0;
-
-		// we care about 3 moments
-		// first and last t when gap >= my_len
-		// first t where gap == 0
+		// edges[0] - first t for which gap >= my_len
+		// edges[1] -  last t for which gap >= my_len
 
 		double gap = front.get_back() - back.front;
 		if (gap >= my_len) {
@@ -80,41 +79,53 @@ uint32_t solve() {
 			double next_gap;
 			if (!last) {
 				double next_t = frontvels[i+1].t;
-				assert(next_t >= t);
 				double duration = next_t - t;
-				if (duration == 0) {
-					assert(false); // NOT impossible (yet?), just unexpected
-				}
+				assert(duration >= 0);
 				next_gap = gap + dg * duration;
 			}
 
 			// working around a dumb gcc bug
-			if (last) last = true; else last = false;
+			if (last == true) last = true;
+			if (last == false) last = false;
 
 			if (nextedge == 0) {
 				assert(gap < my_len);
-				if ((!last && my_len <= next_gap) || (last && 0 < dg)) {
-					nextedge = 1;
-					edges[0] = t - (gap - my_len) / dg;
-					assert(t <= edges[0]);
+				if (0 < dg) {
+					if ((!last && my_len <= next_gap) || last) {
+						nextedge = 1;
+						edges[0] = t - (gap - my_len) / dg;
+						assert(t <= edges[0]);
+					}
 				}
 			} else if (nextedge == 1) {
 				assert(my_len <= gap);
-				if ((!last && next_gap < my_len) || (last && dg < 0)) {
-					nextedge = 2;
-					edges[1] = t - (gap - my_len) / dg;
-					assert(t <= edges[1]);
+				if (dg < 0) {
+					if ((!last && next_gap < my_len) || last) {
+						nextedge = 2;
+						edges[1] = t - (gap - my_len) / dg;
+						assert(t <= edges[1]);
+					}
 				}
 			}
 
-			assert(gap >= 0);
-			if ((!last && next_gap <= 0) || (last && dg < 0)) {
-				hit = true;
-				hit_t = t - gap / dg;
-				assert(hit_t >= t);
-				hit_v = v;
-				break;
+			assert(0 <= gap);
+			if (dg < 0) {
+				if ((!last && next_gap <= 0) || last) {
+					// another bug: had a division by zero there
+					// nextgap <= 0, but that doesn't mean dg != 0
+					// it could also mean that gap == 0
+					// lesson: state your assumptions
+					double d = -gap / dg;
+					assert(d >= 0);
+
+					hit = true;
+					hit_t = t + d;
+					hit_v = v;
+					break;
+				}
 			}
+
+			if (last) break;
 			gap = next_gap;
 		}
 
@@ -122,6 +133,7 @@ uint32_t solve() {
 		debugf("enters_at = (%u + %u) / (%f - %f) = %f\n", back.front, my_len, my_vel, back.v, enters_at);
 		// incorrect if the gap closes before we reach it
 		// doesn't matter much
+
 		bool swerves = false;
 		if (nextedge == 1)
 			swerves = edges[0] <= enters_at;
@@ -130,19 +142,38 @@ uint32_t solve() {
 		if (swerves) swerveamt++;
 
 		if (hit) {
-			debugf("hit_t %f\n", hit_t);
 			while (!frontvels.empty() && !(hit_t < frontvels[0].t))
 				frontvels.pop_front();
 			for (auto f : frontvels) assert(hit_t < f.t);
+			if (false) {
+				// those frontvels aren't needed anymore
+				// but for every input where this improves performance, you can
+				// create one where it (marginally) hurts it
+				//
+				// There's one time limit for the entire task, so for this to
+				// be beneficial there would need to be an extremely tough 
+				// testcase with trucks right at the start, but without the
+				// even harder counterpart with those trucks at the end.
+
+				// I mean this would be way faster if I handrolled a ring
+				// buffer but whatever.
+				while (!frontvels.empty() && !(frontvels.back().t < enters_at))
+					frontvels.pop_back();
+				for (auto f : frontvels) assert(f.t < enters_at);
+			}
+
 			frontvels.push_front({hit_t, hit_v});
-			// TODO prune frontvels after the time we pass the truck
 			if (hit_t != 0)
 				frontvels.push_front({0, back.v});
 		} else {
-			debugf("no hit\n");
 			frontvels.clear();
 			frontvels.push_front({0, back.v});
 		}
+
+		if (hit)
+			debugf("hit_t %f\n", hit_t);
+		else
+			debugf("no hit\n");
 		// for (auto &f : frontvels) debugf("(%f, %f),\t", f.t, f.v);
 		debugf("frontvels.size %lu\n", frontvels.size());
 		debugf("%f => %f, us at %f\n", edges[0], edges[1], enters_at);
