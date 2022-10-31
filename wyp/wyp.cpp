@@ -93,56 +93,29 @@ uint32_t solve() {
 
 			if (nextedge == 0) {
 				assert(gap < my_len);
-				if (!last) {
-					if (next_gap >= my_len) {
-						nextedge = 1;
-						edges[0] = t - (gap - my_len) / dg;
-						assert(edges[0] >= t);
-					}
-				} else {
-					if (dg > 0) {
-						nextedge = 1;
-						edges[0] = t - (gap - my_len) / dg;
-						assert(edges[0] >= t);
-					}
+				if ((!last && my_len <= next_gap) || (last && 0 < dg)) {
+					nextedge = 1;
+					edges[0] = t - (gap - my_len) / dg;
+					assert(t <= edges[0]);
 				}
 			} else if (nextedge == 1) {
-				assert(gap >= my_len);
-				if (!last) {
-					if (next_gap < my_len) {
-						nextedge = 2;
-						edges[1] = t - (gap - my_len) / dg;
-						assert(edges[1] >= t);
-					}
-				} else {
-					if (dg < 0) {
-						nextedge = 2;
-						edges[1] = t - (gap - my_len) / dg;
-						assert(edges[1] >= t);
-					}
+				assert(my_len <= gap);
+				if ((!last && next_gap < my_len) || (last && dg < 0)) {
+					nextedge = 2;
+					edges[1] = t - (gap - my_len) / dg;
+					assert(t <= edges[1]);
 				}
 			}
 
-
-			if (!last) {
-				if (v < back.v && next_gap <= 0) {
-					hit = true;
-					hit_t = t - gap / dg;
-					hit_v = v;
-					assert(hit_t >= t);
-					break;
-				}
-				gap = next_gap;
-			} else {
-				debugf("last one, dg %f\n", dg);
-				if (gap >= 0 && dg < 0) {
-					hit = true;
-					hit_t = t - gap / dg;
-					hit_v = v;
-					assert(hit_t >= 0);
-					break;
-				}
+			assert(gap >= 0);
+			if ((!last && next_gap <= 0) || (last && dg < 0)) {
+				hit = true;
+				hit_t = t - gap / dg;
+				assert(hit_t >= t);
+				hit_v = v;
+				break;
 			}
+			gap = next_gap;
 		}
 
 		double enters_at = (back.front + my_len) / (my_vel - back.v);
