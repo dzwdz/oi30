@@ -1,5 +1,3 @@
-// TODO more extreme test
-
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -145,22 +143,9 @@ uint32_t solve() {
 			while (!frontvels.empty() && !(hit_t < frontvels[0].t))
 				frontvels.pop_front();
 			for (auto f : frontvels) assert(hit_t < f.t);
-			if (false) {
-				// those frontvels aren't needed anymore
-				// but for every input where this improves performance, you can
-				// create one where it (marginally) hurts it
-				//
-				// There's one time limit for the entire task, so for this to
-				// be beneficial there would need to be an extremely tough 
-				// testcase with trucks right at the start, but without the
-				// even harder counterpart with those trucks at the end.
-
-				// I mean this would be way faster if I handrolled a ring
-				// buffer but whatever.
-				while (!frontvels.empty() && !(frontvels.back().t < enters_at))
-					frontvels.pop_back();
-				for (auto f : frontvels) assert(f.t < enters_at);
-			}
+			while (!frontvels.empty() && !(frontvels.back().t < enters_at))
+				frontvels.pop_back();
+			for (auto f : frontvels) assert(f.t < enters_at);
 
 			frontvels.push_front({hit_t, hit_v});
 			if (hit_t != 0)
