@@ -8,7 +8,7 @@
 using namespace std;
 
 #define debugf(...) do{}while(0)
-#define debugf(...) fprintf(stderr, __VA_ARGS__)
+// #define debugf(...) fprintf(stderr, __VA_ARGS__)
 
 struct Car {
 	uint32_t front, size;
@@ -44,6 +44,7 @@ void readtest() {
 }
 
 uint32_t solve() {
+	const double epsilon = 0.00000000001; // eh.
 	uint32_t swerveamt = 1; // always at least one truck
 	struct Frontvel {double t, v;};
 	deque<Frontvel> frontvels;
@@ -137,9 +138,9 @@ uint32_t solve() {
 
 		bool swerves = false;
 		if (nextedge == 1)
-			swerves = edges[0] <= enters_at;
+			swerves = edges[0] - epsilon <= enters_at;
 		else if (nextedge == 2)
-			swerves = edges[0] <= enters_at && enters_at <= edges[1];
+			swerves = edges[0] - epsilon <= enters_at && enters_at <= edges[1] + epsilon;
 		if (swerves) swerveamt++;
 
 		if (hit) {
