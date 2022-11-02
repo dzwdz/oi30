@@ -8,7 +8,7 @@
 using namespace std;
 
 #define debugf(...) do{}while(0)
-// #define debugf(...) fprintf(stderr, __VA_ARGS__)
+#define debugf(...) fprintf(stderr, __VA_ARGS__)
 
 struct Car {
 	uint32_t front, size;
@@ -108,11 +108,14 @@ uint32_t solve() {
 
 			assert(0 <= gap);
 			if (dg < 0) {
-				if ((!last && next_gap <= 0) || last) {
+				if ((!last && next_gap < 0) || last) {
 					// another bug: had a division by zero there
 					// nextgap <= 0, but that doesn't mean dg != 0
 					// it could also mean that gap == 0
 					// lesson: state your assumptions
+
+					// third bug: <= instead of <
+					// lesson: < have edge cases too
 					double d = -gap / dg;
 					assert(d >= 0);
 
@@ -159,9 +162,9 @@ uint32_t solve() {
 			debugf("hit_t %f\n", hit_t);
 		else
 			debugf("no hit\n");
-		// for (auto &f : frontvels) debugf("(%f, %f),\t", f.t, f.v);
+		for (auto &f : frontvels) debugf("(%f, %f),\t", f.t, f.v);
 		debugf("frontvels.size %lu\n", frontvels.size());
-		debugf("%f => %f, us at %f\n", edges[0], edges[1], enters_at);
+		debugf("%f => %f, us at %f (diff %.20f)\n", edges[0], edges[1], enters_at, enters_at - edges[1]);
 		if (swerves) debugf("swerves!\n");
 	} // for cars
 	return swerveamt;

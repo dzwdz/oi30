@@ -53,6 +53,13 @@ def fullvis(in_me, in_trucks):
             off = -.1 if i == cpos else 0
             cars[i].draw(si + off, cars[i].vel)
         si += 2.5
+    def tdraw(): 
+        def r(f):
+            return round(float(f), 2)
+        carvis = []
+        for c in cars:
+            carvis += [f"{r(c.get_back())}>{r(c.front)} '{r(c.vel)}"]
+        print(r(time), changes, f"{r(me.get_back())}>{r(me.front)}", *carvis, sep='\t')
 
     def update(dt):
         nonlocal time, me, side, cpos, changes, cars
@@ -81,7 +88,7 @@ def fullvis(in_me, in_trucks):
                 side = .5 # represent edges
 
     update(0)
-    draw()
+    tdraw()
     while cpos < len(cars):
         c = cars[cpos]
 
@@ -101,7 +108,7 @@ def fullvis(in_me, in_trucks):
             break
 
         update(dt)
-        draw()
+        tdraw()
     return changes
 
 me, trucks = get_testcase()
