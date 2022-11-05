@@ -1,3 +1,5 @@
+#define NDEBUG
+
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -7,7 +9,7 @@
 
 using namespace std;
 
-#define debugf(...) do{}while(0)
+#define debugf(...) ((void)0)
 // #define debugf(...) fprintf(stderr, __VA_ARGS__)
 
 struct Car {
@@ -64,12 +66,12 @@ uint32_t solve() {
 		// edges[1] -  last t for which gap >= my_len
 
 		double gap = front.get_back() - back.front;
-		if (gap >= my_len) {
+		if (my_len <= gap) {
 			nextedge = 1;
 			edges[0] = 0;
 		}
 		for (size_t i = 0; i < frontvels.size(); i++) {
-			assert(gap >= 0);
+			assert(0 <= gap);
 			double t = frontvels[i].t;
 			double v = frontvels[i].v;
 			double dg = v - back.v; // derivative of the gap
@@ -91,18 +93,20 @@ uint32_t solve() {
 				assert(gap < my_len);
 				if (0 < dg) {
 					if ((!last && my_len <= next_gap) || last) {
+						double until = -(gap - my_len) / dg;
+						assert(0 <= until);
+						edges[0] = t + until;
 						nextedge = 1;
-						edges[0] = t - (gap - my_len) / dg;
-						assert(t <= edges[0]);
 					}
 				}
 			} else if (nextedge == 1) {
 				assert(my_len <= gap);
 				if (dg < 0) {
 					if ((!last && next_gap < my_len) || last) {
+						double until = -(gap - my_len) / dg;
+						assert(0 <= until);
+						edges[1] = t + until;
 						nextedge = 2;
-						edges[1] = t - (gap - my_len) / dg;
-						assert(t <= edges[1]);
 					}
 				}
 			}
@@ -116,9 +120,9 @@ uint32_t solve() {
 					// lesson: state your assumptions
 
 					// third bug: <= instead of <
-					// lesson: < have edge cases too
+					// lesson: < has edge cases too
 					double d = -gap / dg;
-					assert(d >= 0);
+					assert(0 <= d);
 
 					hit = true;
 					hit_t = t + d;
