@@ -9,17 +9,18 @@ using namespace std;
 #define MAXVILLAGES 100000
 
 struct Edge{uint32_t from, to, weight;};
+#define MAXEDGES ((MAXVILLAGES-1)*2)
 struct Graph {
-	uint32_t storage[MAXVILLAGES * 2]; // (n-1)*2 directed edges
-	uint32_t weights[MAXVILLAGES * 2]; // size can be cut in half
+	uint32_t storage[MAXEDGES];
+	uint32_t weights[MAXEDGES]; // size could be cut in half
 
-	uint32_t sizes[MAXVILLAGES]; // redundant
-	uint32_t offsets[MAXVILLAGES];
+	uint32_t sizes[MAXEDGES]; // redundant
+	uint32_t offsets[MAXEDGES];
 
-	uint32_t edgeAmt; // <= MAXVILLAGES * 2
+	uint32_t edgeAmt;
 
 	uint32_t eid(uint32_t n, uint32_t i) {
-		assert(n < MAXVILLAGES * 2);
+		assert(n < MAXEDGES);
 		assert(i < sizes[n]);
 		return offsets[n] + i;
 	}
@@ -80,36 +81,33 @@ void gengraph() {
 static vector<bool> visited(MAXVILLAGES, false);
 static bool visited_parity = false;
 
+static vector<bool> castles(MAXVILLAGES);
+
 // max n:
 //   k * sum(1..n) * c
 // = 10^5 * sum(1..10^5) * 10^3
 // = 10^8 * 10^10 = 10^18 = 2^(18*3.32) = 2^60
-//
-// 10^18 dg = 10^16 kg = 10^12 ton
-// https://www.statista.com/statistics/263977/world-grain-production-by-type/
-// worldwide grain production ~= 3000 million tons = 3 * 10^9 tons
-// W najgorszym przypadku Bajtocja może w jeden dzień zużyć więcej zboża niż
-// da się zebrać w 300 lat. Życzę szczęścia.
-
-// shitty, makes the solution quadratic
-bool countp(uint64_t n, uint32_t princes_before) {
-	if (n == 0) return true;
-	for (uint32_t i = 0; i < princes_before; i++)
-		if (princes[i] == n) return true;
-	return false;
-}
-
-uint64_t _dfs(uint64_t n, uint32_t princes_before, uint64_t cost = 0) {
+uint64_t _dfs(uint64_t n, uint64_t cost = 0) {
 	assert(n < MAXVILLAGES);
+
+	// I could turn the graph into a digraph and always start the search from
+	// the root. Would save memory, and take less time than the current solution.
+	//
+	// The proper way is probably to divide the tree into halves, so you only have
+	// to recrawl your current half or something like that.
+	// Or you could cache the cost for each road coming out of a castle. It would
+	// still require a lot of dumb crawling, though.
 	if (visited[n] ^ visited_parity) return 0;
 	visited[n] = !visited_parity;
+
 	uint64_t total = 0;
-	if (countp(n, princes_before)) total += cost;
+	if (castles[n])
+		total += cost;
 	for (uint32_t i = 0; i < g.sizes[n]; i++) {
 		uint32_t eid = g.eid(n, i);
 		auto weight = g.weights[eid];
 		auto next   = g.storage[eid];
-		total += _dfs(next, princes_before, cost + weight);
+		total += _dfs(next, cost + weight);
 	}
 	return total;
 }
@@ -117,15 +115,13 @@ uint64_t _dfs(uint64_t n, uint32_t princes_before, uint64_t cost = 0) {
 int main() {
 	readcase();
 	gengraph();
-	// for (uint32_t i = 0; i < villageAmt; i++) {
-	// 	printf("%u: ", i + 1);
-	// 	for (uint32_t j = 0; j < g.sizes[i]; j++)
-	// 		printf("%u (%u), ", g.storage[g.eid(i, j)] + 1, g.weights[g.eid(i, j)]);
-	// 	printf("\n");
-	// }
+
 	uint64_t count = 0;
+	castles[0] = true;
 	for (uint32_t i = 0; i < princeAmt; i++) {
-		count += _dfs(princes[i], i) * 2;
+		assert(0 < princes[i] && princes[i] < MAXVILLAGES);
+		count += _dfs(princes[i]) * 2;
+		castles[princes[i]] = true;
 		visited_parity ^= true;
 		printf("%lu\n", count);
 	}
