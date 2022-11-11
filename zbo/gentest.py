@@ -1,8 +1,8 @@
 import random
 
-n = 100000
+n = 16
 k = n - 1
-max_weight = 1000
+max_weight = 5
 
 print(n, k)
 for i in range(2, n + 1):
