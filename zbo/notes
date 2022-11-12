@@ -1,3 +1,16 @@
 segfaults on 2ocen
 find the crash manually
 no assertion catched it!
+
+
+divide the tree
+easy for dividing by one node
+for each edge count amount of villages behind it and the distance to them
+
+harder for multiple
+
+in linear example:
+1 2 3 4 5 6 7 8
+   2   1   3
+
+1x 1  <- 1 ->  0x 0
