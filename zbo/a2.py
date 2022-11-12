@@ -101,6 +101,14 @@ def tree_divide(root=None, novisit=[]): # probably O(n log n)ish
         tree_divide(c, novisit)
 
 tree_divide()
+# newroot = tree_center(nodes[0])
+
+def backs_away(n):
+    p = parents[n]
+    if not p: return False
+    p2 = parents[p]
+    if not p2: return False
+    return dfs_isbetween(p, p2, n)
 
 # (amt of connected villages, total distance)
 data = defaultdict(lambda: (0, 0))
@@ -110,14 +118,21 @@ def insert(n, data=data, edgedata=edgedata):
     d = 0 # distance from original n
     data[n] = (data[n][0] + 1, data[n][1])
     prev = None
+    og_n = n
     while True:
         p = parents[n]
         if not p: break
 
-        if prev and backs_away(prev):
-            d = parentdist[n] - d
-        else:
-            d = parentdist[n] + d
+        # pd = parentdist
+        # if prev and backs_away(prev):
+        #     # d = d + parentdist[n] - parentdist[prev] * 2
+        #     # assert parentdist[n] > d
+        #     d = parentdist[n] - d
+        # else:
+        #     d += parentdist[n]
+        # print(f"{og_n} -> {p} = {d}")
+        d = dfs_dist(og_n, p)
+        assert dfs_dist(og_n, p) == d
 
         data1 = data[p]
         data2 = edgedata[(p,n)]
@@ -127,20 +142,6 @@ def insert(n, data=data, edgedata=edgedata):
         prev = n
         n = p
     return r
-
-def backs_away(n):
-    p = parents[n]
-    if not p: return False
-    p2 = parents[p]
-    if not p2: return False
-    return dfs_isbetween(p, p2, n)
-
-def ins_distance_test(a, b):
-    # when on pod2: this is the stupidest way to subtract numbers, lmao
-    data = defaultdict(lambda: (0, 0))
-    edgedata = defaultdict(lambda: (0,0))
-    insert(a, data, edgedata)
-    return insert(b, data, edgedata)
 
 if False:
     print("digraph{")

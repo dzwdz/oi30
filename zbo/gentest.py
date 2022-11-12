@@ -1,6 +1,6 @@
 import random
 
-n = 16
+n = 64
 k = n - 1
 max_weight = 5
 
