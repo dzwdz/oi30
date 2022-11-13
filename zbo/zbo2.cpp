@@ -133,13 +133,17 @@ struct RMQ {
 	void generate(const uint32_t *l, uint32_t len) {
 		this->l = l;
 		this->len = len;
+
+		for (uint32_t p = 1;     0 + (1u<<p) - 1 < len; p++)
+			for (uint32_t i = 0; i + (1u<<p) - 1 < len; i++)
+				m[i][p] = get_u(i, p);
 	}
 
 	uint32_t rmq(uint32_t a, uint32_t b) {
 		// -> min( l[k] : k \in [a; b) )
 		assert(a < b);
 		uint32_t p = log2(b - a); // highest p for which 2**p <= b-a
-		assert((1<<p) <= b-a && b-a < (2<<p));
+		assert((1u<<p) <= b-a && b-a < (2u<<p));
 		uint32_t i = get(a, p);
 		uint32_t j = get(b - (1<<p), p); // k \in [_; b)
 		uint32_t r = l[i] < l[j] ? i : j;
@@ -149,6 +153,13 @@ struct RMQ {
 
 private:
 	uint32_t get(uint32_t at, uint32_t p) {
+		if (p == 0) return at;
+		assert(at < MAXEDGES * 2);
+		assert(p < RMQ_MP);
+		return m[at][p];
+	}
+
+	uint32_t get_u(uint32_t at, uint32_t p) {
 		// -> min( l[k] : k \in [i; i + 2**j) )
 		if (p == 0) return at;
 		uint32_t i = get(at, p-1);
@@ -341,16 +352,16 @@ int main() {
 	auto novisit = unordered_set<uint32_t>();
 	tree_divide(root, &novisit);
 
-	if (false) {
-		printf("digraph {\n");
-		for (uint32_t i = 0; i < villageAmt; i++) {
-			auto p = parents.get(i);
-			if (p < 0) continue;
-			printf("%u->%u\n", i + 1, p + 1);
-		}
-		printf("}\n");
-		return 0;
+#if 0
+	printf("digraph {\n");
+	for (uint32_t i = 0; i < villageAmt; i++) {
+		auto p = parents.get(i);
+		if (p < 0) continue;
+		printf("%u->%u\n", i + 1, p + 1);
 	}
+	printf("}\n");
+	return 0;
+#endif
 
 	lca.generate(root);
 
