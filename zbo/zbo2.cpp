@@ -1,4 +1,9 @@
-#define NDEBUG
+/* > Należy [...] podać w rozwiązaniu, w komentarzu, odnośnik do wykorzystanej
+ * literatury lub kodu. 
+ *
+ * https://www3.cs.stonybrook.edu/~bender/pub/JALG05-daglca.pdf
+ * https://en.wikipedia.org/wiki/Lowest_common_ancestor#Reduction_from_LCA_to_RMQ
+ */
 
 #include <cassert>
 #include <cstdio>
@@ -11,8 +16,6 @@ using namespace std;
 
 #define MAXVILLAGES 100000
 #define MAXEDGES ((MAXVILLAGES-1)*2)
-#define LGVILLAGES 17
-static_assert(MAXVILLAGES <= (1 << LGVILLAGES));
 
 struct Edge{uint32_t from, to, weight;};
 struct Graph {
@@ -104,6 +107,110 @@ static vector<Edge> edges;
 static vector<uint32_t> princes;
 static Graph g;
 
+constexpr uint32_t log2(uint32_t n) {
+	uint32_t res = 0;
+	while (n > 1) {
+		n >>= 1;
+		res += 1;
+	}
+	return res;
+}
+static_assert(log2(1) == 0);
+static_assert(log2(2) == 1);
+static_assert(log2(3) == 1);
+static_assert(log2(4) == 2);
+static_assert(log2(7) == 2);
+static_assert(log2(8) == 3);
+
+struct RMQ {
+	// log2(MAXEDGES * 2) = log2(MAXVILLAGES * 4) = log2(400000) = 18.. = 19
+#define RMQ_MP 19
+	static_assert((MAXEDGES * 2) < (1 << RMQ_MP));
+	uint32_t m[MAXEDGES * 2][RMQ_MP];
+
+	const uint32_t *l;
+	uint32_t len;
+	void generate(const uint32_t *l, uint32_t len) {
+		this->l = l;
+		this->len = len;
+	}
+
+	uint32_t rmq(uint32_t a, uint32_t b) {
+		// -> min( l[k] : k \in [a; b) )
+		assert(a < b);
+		uint32_t p = log2(b - a); // highest p for which 2**p <= b-a
+		assert((1<<p) <= b-a && b-a < (2<<p));
+		uint32_t i = get(a, p);
+		uint32_t j = get(b - (1<<p), p); // k \in [_; b)
+		uint32_t r = l[i] < l[j] ? i : j;
+		assert(a <= r && r < b);
+		return r;
+	}
+
+private:
+	uint32_t get(uint32_t at, uint32_t p) {
+		// -> min( l[k] : k \in [i; i + 2**j) )
+		if (p == 0) return at;
+		uint32_t i = get(at, p-1);
+		uint32_t j = get(at + (1<<(p-1)), p-1);
+		assert(i < len && j < len);
+		return l[i] < l[j] ? i : j;
+	}
+};
+
+struct LCA {
+	uint32_t id[MAXEDGES * 2];
+	uint32_t depths[MAXEDGES * 2];
+	uint32_t first[MAXVILLAGES];
+	uint64_t dists[MAXVILLAGES];
+	struct RMQ rmq;
+
+	void generate(uint32_t root) {
+		dfs(root, root, 0, 0);
+		rmq.generate(depths, pos);
+	}
+
+	uint32_t lca(uint32_t a, uint32_t b) {
+		if (a == b) return a;
+		a = first[a];
+		b = first[b];
+		if (b < a) swap(a, b);
+		return id[rmq.rmq(a, b)];
+	}
+
+	uint64_t dist(uint32_t a, uint32_t b) { // O(n)
+		assert(a < villageAmt);
+		assert(b < villageAmt);
+		return dists[a] + dists[b] - dists[lca(a, b)] * 2;
+	}
+
+private:
+	uint32_t pos = 0;
+	void dfs(uint32_t n, uint32_t from, uint32_t depth, uint32_t dist) {
+		assert(pos < MAXEDGES * 2);
+		id[pos] = n;
+		depths[pos] = depth;
+		assert(first[n] == 0);
+		first[n] = pos;
+		dists[n] = dist;
+		pos++;
+
+		for (uint32_t i = 0; i < g.sizes[n]; i++) {
+			uint32_t e = g.storage[g.eid(n, i)];
+			uint32_t w = g.weights[g.eid(n, i)];
+			if (e == from) continue;
+			dfs(e, n, depth + 1, dist + w);
+
+			assert(pos < MAXEDGES * 2);
+			id[pos] = n;
+			depths[pos] = depth;
+			pos++;
+		}
+	}
+};
+static LCA lca;
+
+
 void readcase() {
 	scanf("%u %u ", &villageAmt, &princeAmt);
 	assert(1 <= princeAmt && princeAmt < villageAmt && villageAmt <= MAXVILLAGES);
@@ -191,6 +298,7 @@ struct DistData {
 static DistData dd_village[MAXVILLAGES];
 static DistData dd_pedge[MAXVILLAGES]; // edge to parent, from parent's perspective
 
+#if 0
 int64_t dfs_dist(uint32_t a, uint32_t b, int32_t back=-1) {
 	if (a == b) return 0;
 	for (uint32_t i = 0; i < g.sizes[a]; i++) {
@@ -203,6 +311,7 @@ int64_t dfs_dist(uint32_t a, uint32_t b, int32_t back=-1) {
 	}
 	return -1;
 }
+#endif
 
 uint64_t insert(uint32_t og_n) {
 	uint32_t r = dd_village[og_n].dist; // result
@@ -211,7 +320,7 @@ uint64_t insert(uint32_t og_n) {
 	for (;;) {
 		int32_t p = parents.get(n);
 		if (p < 0) break;
-		uint32_t d = dfs_dist(og_n, p);
+		uint32_t d = lca.dist(og_n, p);
 		auto data1 = &dd_village[p];
 		auto data2 = &dd_pedge[n]; // edge to parent from us; already counted stuff
 		r += (data1->amt - data2->amt) * d + data1->dist - data2->dist;
@@ -242,6 +351,15 @@ int main() {
 		printf("}\n");
 		return 0;
 	}
+
+	lca.generate(root);
+
+#if 0
+	for (uint32_t i = 0; i < villageAmt; i++)
+		for (uint32_t j = i; j < villageAmt; j++)
+			assert(dfs_dist(i, j) == lca.dist(i, j));
+	return 0;
+#endif
 
 	uint64_t count = 0;
 	insert(0);
