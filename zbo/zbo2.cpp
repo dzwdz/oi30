@@ -253,7 +253,7 @@ void gengraph() {
 	g.edgeAmt = edges.size() * 2;
 
 	uint32_t end = 0;
-	for (uint32_t i = 0; i < g.edgeAmt; i++) {
+	for (uint32_t i = 0; i < villageAmt; i++) {
 		g.offsets[i] = end;
 		end += g.sizes[i];
 	}
