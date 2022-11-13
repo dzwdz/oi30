@@ -325,13 +325,13 @@ int64_t dfs_dist(uint32_t a, uint32_t b, int32_t back=-1) {
 #endif
 
 uint64_t insert(uint32_t og_n) {
-	uint32_t r = dd_village[og_n].dist; // result
+	uint64_t r = dd_village[og_n].dist; // result
 	dd_village[og_n].amt += 1;
 	uint32_t n = og_n;
 	for (;;) {
 		int32_t p = parents.get(n);
 		if (p < 0) break;
-		uint32_t d = lca.dist(og_n, p);
+		uint64_t d = lca.dist(og_n, p);
 		auto data1 = &dd_village[p];
 		auto data2 = &dd_pedge[n]; // edge to parent from us; already counted stuff
 		r += (data1->amt - data2->amt) * d + data1->dist - data2->dist;
