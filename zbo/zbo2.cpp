@@ -5,6 +5,8 @@
  * https://en.wikipedia.org/wiki/Lowest_common_ancestor#Reduction_from_LCA_to_RMQ
  */
 
+#define NDEBUG
+
 #include <cassert>
 #include <cstdio>
 #include <cstdint>
@@ -107,7 +109,7 @@ static vector<Edge> edges;
 static vector<uint32_t> princes;
 static Graph g;
 
-constexpr uint32_t log2(uint32_t n) {
+static uint32_t log2(uint32_t n) {
 	uint32_t res = 0;
 	while (n > 1) {
 		n >>= 1;
@@ -115,12 +117,6 @@ constexpr uint32_t log2(uint32_t n) {
 	}
 	return res;
 }
-static_assert(log2(1) == 0);
-static_assert(log2(2) == 1);
-static_assert(log2(3) == 1);
-static_assert(log2(4) == 2);
-static_assert(log2(7) == 2);
-static_assert(log2(8) == 3);
 
 struct RMQ {
 	// log2(MAXEDGES * 2) = log2(MAXVILLAGES * 4) = log2(400000) = 18.. = 19
